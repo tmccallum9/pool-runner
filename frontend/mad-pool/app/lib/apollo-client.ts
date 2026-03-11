@@ -1,9 +1,11 @@
-import { ApolloClient, InMemoryCache, HttpLink, NormalizedCacheObject } from '@apollo/client';
+import { ApolloClient } from '@apollo/client/core';
+import { InMemoryCache } from '@apollo/client/cache';
+import { HttpLink } from '@apollo/client/link/http';
 import { setContext } from '@apollo/client/link/context';
 
-let client: ApolloClient<NormalizedCacheObject> | null = null;
+let client: any = null;
 
-export function getApolloClient(): ApolloClient<NormalizedCacheObject> {
+export function getApolloClient() {
   const isServer = typeof window === 'undefined';
 
   // Always create a new client on the server (for SSR)

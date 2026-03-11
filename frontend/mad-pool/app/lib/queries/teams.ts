@@ -77,3 +77,21 @@ export const GET_DRAFT_PICKS = gql`
     }
   }
 `;
+
+// Get current draft turn for a pool
+export const GET_CURRENT_DRAFT_TURN = gql`
+  query GetCurrentDraftTurn($poolId: UUID!) {
+    getCurrentDraftTurn(poolId: $poolId) {
+      id
+      user {
+        id
+        email
+      }
+      pool {
+        id
+      }
+      isOwner
+      hasDrafted
+    }
+  }
+`;

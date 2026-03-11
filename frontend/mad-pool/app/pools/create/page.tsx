@@ -10,6 +10,13 @@ import { Button } from '@/app/components/atoms/button';
 import { Label } from '@/app/components/atoms/label';
 import { CREATE_POOL } from '@/app/lib/mutations/pool';
 import { useAuth } from '@/app/contexts/UserContext';
+import { Pool } from '@/app/lib/types';
+
+interface CreatePoolData {
+  createPool: {
+    pool: Pool;
+  };
+}
 
 export default function CreatePoolPage() {
   const router = useRouter();
@@ -20,7 +27,7 @@ export default function CreatePoolPage() {
   const [mockEmail, setMockEmail] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const [createPool, { loading }] = useMutation(CREATE_POOL, {
+  const [createPool, { loading }] = useMutation<CreatePoolData>(CREATE_POOL, {
     onCompleted: (data) => {
       // Redirect to pool dashboard on success
       router.push(`/pools/${data.createPool.pool.id}`);

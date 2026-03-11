@@ -27,7 +27,7 @@ export function DraftProvider({ poolId, children }: DraftProviderProps) {
   const {
     data: poolData,
     refetch: refetchPool,
-  } = useQuery(GET_POOL, {
+  } = useQuery<{ getPool: Pool }>(GET_POOL, {
     variables: { id: poolId },
     skip: !poolId,
     fetchPolicy: 'cache-and-network',
@@ -44,7 +44,7 @@ export function DraftProvider({ poolId, children }: DraftProviderProps) {
     refetch: refetchPicks,
     startPolling,
     stopPolling,
-  } = useQuery(GET_DRAFT_PICKS, {
+  } = useQuery<{ getDraftPicks: DraftPick[] }>(GET_DRAFT_PICKS, {
     variables: { poolId },
     skip: !poolId,
     fetchPolicy: 'cache-and-network',
@@ -58,7 +58,7 @@ export function DraftProvider({ poolId, children }: DraftProviderProps) {
     refetch: refetchTurn,
     startPolling: startTurnPolling,
     stopPolling: stopTurnPolling,
-  } = useQuery(GET_CURRENT_DRAFT_TURN, {
+  } = useQuery<{ getCurrentDraftTurn: PoolMembership }>(GET_CURRENT_DRAFT_TURN, {
     variables: { poolId },
     skip: !poolId || draftStatus !== DraftStatus.IN_PROGRESS,
     fetchPolicy: 'cache-and-network',

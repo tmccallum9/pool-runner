@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Header } from './components/organisms/header';
 import { Heading } from './components/atoms/heading';
 import { Button } from './components/atoms/button';

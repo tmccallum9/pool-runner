@@ -10,6 +10,13 @@ import { Button } from '@/app/components/atoms/button';
 import { Label } from '@/app/components/atoms/label';
 import { JOIN_POOL } from '@/app/lib/mutations/pool';
 import { useAuth } from '@/app/contexts/UserContext';
+import { PoolMembership } from '@/app/lib/types';
+
+interface JoinPoolData {
+  joinPool: {
+    membership: PoolMembership;
+  };
+}
 
 export default function JoinPoolPage() {
   const router = useRouter();
@@ -19,10 +26,10 @@ export default function JoinPoolPage() {
   const [mockEmail, setMockEmail] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const [joinPool, { loading }] = useMutation(JOIN_POOL, {
+  const [joinPool, { loading }] = useMutation<JoinPoolData>(JOIN_POOL, {
     onCompleted: (data) => {
       // Redirect to pool dashboard on success
-      router.push(`/pools/${data.joinPool.pool.id}`);
+      router.push(`/pools/${data.joinPool.membership.pool.id}`);
     },
     onError: (error) => {
       setErrors({ submit: error.message });
