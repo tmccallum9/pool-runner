@@ -133,6 +133,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # GraphQL Settings
 GRAPHENE = {
     'SCHEMA': 'schema.schema',
+    'CAMELCASE_ERRORS': True,  # Convert error keys to camelCase
 }
 
 # CORS Settings for Next.js Frontend

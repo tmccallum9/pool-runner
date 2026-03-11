@@ -33,17 +33,51 @@ class DraftStatusEnum(graphene.Enum):
 
 
 class PoolType(DjangoObjectType):
-    draft_status = graphene.Field(DraftStatusEnum)
+    # Expose camelCase versions for GraphQL
+    urlSlug = graphene.String()
+    draftStatus = graphene.Field(DraftStatusEnum)
+    maxMembers = graphene.Int()
+    createdAt = graphene.DateTime()
+    updatedAt = graphene.DateTime()
 
     class Meta:
         model = Pool
-        fields = ('id', 'name', 'url_slug', 'owner', 'draft_status', 'max_members', 'created_at', 'updated_at')
+        fields = ('id', 'name', 'owner')
+
+    def resolve_urlSlug(self, info):
+        return self.url_slug
+
+    def resolve_draftStatus(self, info):
+        return self.draft_status
+
+    def resolve_maxMembers(self, info):
+        return self.max_members
+
+    def resolve_createdAt(self, info):
+        return self.created_at
+
+    def resolve_updatedAt(self, info):
+        return self.updated_at
 
 
 class PoolMembershipType(DjangoObjectType):
+    # Expose camelCase versions for GraphQL
+    draftPosition = graphene.Int()
+    totalPoints = graphene.Int()
+    createdAt = graphene.DateTime()
+
     class Meta:
         model = PoolMembership
-        fields = ('id', 'pool', 'user', 'draft_position', 'total_points', 'created_at')
+        fields = ('id', 'pool', 'user')
+
+    def resolve_draftPosition(self, info):
+        return self.draft_position
+
+    def resolve_totalPoints(self, info):
+        return self.total_points
+
+    def resolve_createdAt(self, info):
+        return self.created_at
 
 
 # Queries
@@ -51,25 +85,25 @@ class PoolQueries(graphene.ObjectType):
     get_pool = graphene.Field(
         PoolType,
         id=graphene.UUID(),
-        url_slug=graphene.String()
+        urlSlug=graphene.String()
     )
     get_pool_members = graphene.List(
         PoolMembershipType,
-        pool_id=graphene.UUID(required=True)
+        poolId=graphene.UUID(required=True)
     )
     get_user_pools = graphene.List(
         PoolType,
-        user_id=graphene.UUID(required=True)
+        userId=graphene.UUID(required=True)
     )
     get_pool_standings = graphene.List(
         PoolMembershipType,
-        pool_id=graphene.UUID(required=True)
+        poolId=graphene.UUID(required=True)
     )
     get_invite_url = graphene.String(
-        pool_id=graphene.UUID(required=True)
+        poolId=graphene.UUID(required=True)
     )
 
-    def resolve_get_pool(self, info, id=None, url_slug=None):
+    def resolve_get_pool(self, info, id=None, urlSlug=None):
         """Get pool by ID or URL slug."""
         user = authenticate_request(info)
         if not user:
@@ -80,47 +114,57 @@ class PoolQueries(graphene.ObjectType):
                 return Pool.objects.get(id=id)
             except Pool.DoesNotExist:
                 raise PoolNotFoundError()
-        elif url_slug:
+        elif urlSlug:
+            # Convert camelCase to snake_case for Django ORM
+            url_slug = urlSlug
             try:
                 return Pool.objects.get(url_slug=url_slug)
             except Pool.DoesNotExist:
                 raise PoolNotFoundError()
         else:
-            raise PoolNotFoundError("Must provide either id or url_slug")
+            raise PoolNotFoundError("Must provide either id or urlSlug")
 
-    def resolve_get_pool_members(self, info, pool_id):
+    def resolve_get_pool_members(self, info, poolId):
         """Get all members of a pool."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
+        # Convert camelCase to snake_case for Django ORM
+        pool_id = poolId
         return PoolMembership.objects.filter(pool_id=pool_id).order_by('-total_points')
 
-    def resolve_get_user_pools(self, info, user_id):
+    def resolve_get_user_pools(self, info, userId):
         """Get all pools a user is a member of or owns."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
+        # Convert camelCase to snake_case for Django ORM
+        user_id = userId
         memberships = PoolMembership.objects.filter(user_id=user_id)
         pool_ids = memberships.values_list('pool_id', flat=True)
         return Pool.objects.filter(id__in=pool_ids)
 
-    def resolve_get_pool_standings(self, info, pool_id):
+    def resolve_get_pool_standings(self, info, poolId):
         """Get leaderboard standings for a pool."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
+        # Convert camelCase to snake_case for Django ORM
+        pool_id = poolId
         return PoolMembership.objects.filter(pool_id=pool_id).order_by('-total_points')
 
-    def resolve_get_invite_url(self, info, pool_id):
+    def resolve_get_invite_url(self, info, poolId):
         """Get the full invite URL for a pool."""
         from django.conf import settings
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
+        # Convert camelCase to snake_case for Django ORM
+        pool_id = poolId
         try:
             pool = Pool.objects.get(id=pool_id)
         except Pool.DoesNotExist:
@@ -164,19 +208,20 @@ class CreatePool(graphene.Mutation):
 
 class JoinPool(graphene.Mutation):
     class Arguments:
-        url_slug = graphene.String(required=True)
+        urlSlug = graphene.String(required=True)
         password = graphene.String(required=True)
 
     membership = graphene.Field(PoolMembershipType)
 
     @transaction.atomic
-    def mutate(self, info, url_slug, password):
+    def mutate(self, info, urlSlug, password):
         """Join an existing pool."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
-        # Get pool
+        # Get pool (convert camelCase to snake_case for Django ORM)
+        url_slug = urlSlug
         try:
             pool = Pool.objects.get(url_slug=url_slug)
         except Pool.DoesNotExist:
@@ -202,18 +247,19 @@ class JoinPool(graphene.Mutation):
 
 class RandomizeDraftOrder(graphene.Mutation):
     class Arguments:
-        pool_id = graphene.UUID(required=True)
+        poolId = graphene.UUID(required=True)
 
     memberships = graphene.List(PoolMembershipType)
 
     @transaction.atomic
-    def mutate(self, info, pool_id):
+    def mutate(self, info, poolId):
         """Randomize draft order for all pool members."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
-        # Get pool
+        # Get pool (convert camelCase to snake_case for Django ORM)
+        pool_id = poolId
         try:
             pool = Pool.objects.get(id=pool_id)
         except Pool.DoesNotExist:
@@ -231,17 +277,18 @@ class RandomizeDraftOrder(graphene.Mutation):
 
 class StartDraft(graphene.Mutation):
     class Arguments:
-        pool_id = graphene.UUID(required=True)
+        poolId = graphene.UUID(required=True)
 
     pool = graphene.Field(PoolType)
 
-    def mutate(self, info, pool_id):
+    def mutate(self, info, poolId):
         """Start the draft for a pool."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
-        # Get pool
+        # Get pool (convert camelCase to snake_case for Django ORM)
+        pool_id = poolId
         try:
             pool = Pool.objects.get(id=pool_id)
         except Pool.DoesNotExist:
@@ -264,17 +311,18 @@ class StartDraft(graphene.Mutation):
 
 class CompleteDraft(graphene.Mutation):
     class Arguments:
-        pool_id = graphene.UUID(required=True)
+        poolId = graphene.UUID(required=True)
 
     pool = graphene.Field(PoolType)
 
-    def mutate(self, info, pool_id):
+    def mutate(self, info, poolId):
         """Complete the draft for a pool."""
         user = authenticate_request(info)
         if not user:
             raise NotAuthenticatedError()
 
-        # Get pool
+        # Get pool (convert camelCase to snake_case for Django ORM)
+        pool_id = poolId
         try:
             pool = Pool.objects.get(id=pool_id)
         except Pool.DoesNotExist:
