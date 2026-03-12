@@ -11,8 +11,6 @@ message = Mail(
     html_content='<strong>and easy to do anywhere, even with Python</strong>')
 try:
     sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-    # sg.set_sendgrid_data_residency("eu")
-    # uncomment the above line if you are sending mail using a regional EU subuser
     response = sg.send(message)
     print(response.status_code)
     print(response.body)

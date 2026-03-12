@@ -113,6 +113,10 @@ def send_magic_link_email(email, magic_link_token):
         """
     )
 
+    if not settings.SENDGRID_API_KEY:
+        print(f"Magic link fallback for {email}: {magic_link_url}")
+        return True
+
     try:
         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
         response = sg.send(message)
