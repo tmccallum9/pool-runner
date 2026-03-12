@@ -76,6 +76,7 @@ DB_NAME=pool_runner
 DB_USER=<from-render-db>
 DB_PASSWORD=<from-render-db>
 DB_HOST=<from-render-db>.render.com
+DB_HOSTADDR=<optional-ipv4-address>
 DB_PORT=5432
 
 # JWT Authentication
@@ -263,6 +264,7 @@ You should see the homepage.
 
 **Database Connection Errors:**
 - Verify `DATABASE_URL` or individual DB variables are correct
+- If logs show an unreachable IPv6 address, set `DB_HOSTADDR` to the database server's IPv4 address
 - Check that database is in the same region
 - Use the **Internal Database URL** (faster and free)
 

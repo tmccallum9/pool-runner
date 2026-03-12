@@ -6,6 +6,7 @@ Configured for Supabase PostgreSQL connection.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from urllib.parse import parse_qsl, unquote, urlparse
 
 # Load environment variables
 load_dotenv()
@@ -89,19 +90,42 @@ if USE_SQLITE:
     }
 else:
     # Supabase PostgreSQL for production
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'postgres'),
-            'USER': os.getenv('DB_USER', 'postgres'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT', '5432'),
-            'OPTIONS': {
-                'sslmode': 'require',  # Supabase requires SSL
-            },
+    database_url = os.getenv('DATABASE_URL')
+
+    if database_url:
+        parsed = urlparse(database_url)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': unquote(parsed.path.lstrip('/')) or 'postgres',
+                'USER': unquote(parsed.username or 'postgres'),
+                'PASSWORD': unquote(parsed.password or ''),
+                'HOST': parsed.hostname,
+                'PORT': str(parsed.port or '5432'),
+            }
         }
-    }
+        query_options = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        if query_options:
+            DATABASES['default']['OPTIONS'] = query_options
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('DB_NAME', 'postgres'),
+                'USER': os.getenv('DB_USER', 'postgres'),
+                'PASSWORD': os.getenv('DB_PASSWORD'),
+                'HOST': os.getenv('DB_HOST'),
+                'PORT': os.getenv('DB_PORT', '5432'),
+            }
+        }
+
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS'].setdefault('sslmode', 'require')  # Supabase requires SSL
+
+    # Allow forcing IPv4 when a host resolves to an unreachable IPv6 address.
+    db_hostaddr = os.getenv('DB_HOSTADDR')
+    if db_hostaddr:
+        DATABASES['default']['OPTIONS']['hostaddr'] = db_hostaddr
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

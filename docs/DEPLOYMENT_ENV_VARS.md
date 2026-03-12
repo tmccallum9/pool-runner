@@ -19,12 +19,15 @@ ALLOWED_HOSTS=your-app.onrender.com
 ```
 DATABASE_URL=your-supabase-database-url
 DB_HOST=your-supabase-host
+DB_HOSTADDR=optional-ipv4-address
 DB_NAME=postgres
 DB_USER=postgres
 DB_PASSWORD=your-database-password
 DB_PORT=5432
 USE_SQLITE=False
 ```
+
+`DATABASE_URL` is the preferred production setting. Use `DB_HOSTADDR` only if your database hostname resolves to IPv6 in your runtime and you need to force an IPv4 address.
 
 ### JWT Authentication
 ```
