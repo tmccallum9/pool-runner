@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/app/components/organisms/header';
 import { Heading } from '@/app/components/atoms/heading';
 import { Input } from '@/app/components/atoms/input';
@@ -20,17 +21,16 @@ interface JoinPoolData {
 
 export default function JoinPoolBySlugPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const slug = params.slug as string;
-
-  const { user, isAuthenticated, setUser, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [password, setPassword] = useState('');
-  const [mockEmail, setMockEmail] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const signInHref = `/auth/sign-in?next=${encodeURIComponent(pathname || `/pools/join/${slug}`)}`;
 
   const [joinPool, { loading }] = useMutation<JoinPoolData>(JOIN_POOL, {
     onCompleted: (data) => {
-      // Redirect to pool dashboard on success
       router.push(`/pools/${data.joinPool.membership.pool.id}`);
     },
     onError: (error) => {
@@ -41,10 +41,6 @@ export default function JoinPoolBySlugPage() {
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!isAuthenticated && !mockEmail.trim()) {
-      newErrors.mockEmail = 'Email is required';
-    }
-
     if (!password) {
       newErrors.password = 'Password is required';
     }
@@ -53,37 +49,25 @@ export default function JoinPoolBySlugPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!validateForm()) {
       return;
-    }
-
-    // If not authenticated with JWT, set mock user first
-    const hasAuthToken = typeof window !== 'undefined' && !!localStorage.getItem('authToken');
-    if (!hasAuthToken && !isAuthenticated && mockEmail) {
-      setUser({
-        id: `mock-${Date.now()}`,
-        email: mockEmail,
-        createdAt: new Date().toISOString(),
-      });
     }
 
     try {
       await joinPool({
         variables: {
           urlSlug: slug,
-          password: password,
+          password,
         },
       });
     } catch (error) {
-      // Error handling is done in onError callback
       console.error('Join pool error:', error);
     }
   };
 
-  // Show loading while checking authentication
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -91,6 +75,30 @@ export default function JoinPoolBySlugPage() {
         <main className="container mx-auto px-4 py-16">
           <div className="mx-auto max-w-md text-center">
             <p className="text-gray-600">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-16">
+          <div className="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+            <Heading level={2} className="mb-3">
+              Sign In Required
+            </Heading>
+            <p className="mb-6 text-gray-600">
+              You need to sign in before accepting this pool invite so the membership is attached to the right
+              account.
+            </p>
+            <Link href={signInHref}>
+              <Button variant="primary" size="lg" className="w-full">
+                Sign In to Accept Invite
+              </Button>
+            </Link>
           </div>
         </main>
       </div>
@@ -108,7 +116,7 @@ export default function JoinPoolBySlugPage() {
               Join Pool
             </Heading>
             <p className="text-gray-600">
-              You've been invited to join <span className="font-semibold">{slug}</span>
+              You&apos;ve been invited to join <span className="font-semibold">{slug}</span>
             </p>
             {isAuthenticated && user && (
               <p className="mt-2 text-sm text-green-600">
@@ -119,37 +127,11 @@ export default function JoinPoolBySlugPage() {
 
           <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Pool Slug (Display Only) */}
               <div>
                 <Label htmlFor="poolSlug">Pool Name</Label>
-                <Input
-                  id="poolSlug"
-                  type="text"
-                  value={slug}
-                  disabled
-                  helperText="This pool's unique identifier"
-                />
+                <Input id="poolSlug" type="text" value={slug} disabled helperText="This pool's unique identifier" />
               </div>
 
-              {/* Mock Email (only show if not authenticated) */}
-              {!isAuthenticated && (
-                <div>
-                  <Label htmlFor="mockEmail" required>
-                    Your Email
-                  </Label>
-                  <Input
-                    id="mockEmail"
-                    type="email"
-                    value={mockEmail}
-                    onChange={(e) => setMockEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    error={errors.mockEmail}
-                    helperText="Mock authentication - enter any email"
-                  />
-                </div>
-              )}
-
-              {/* Password */}
               <div>
                 <Label htmlFor="password" required>
                   Pool Password
@@ -158,41 +140,32 @@ export default function JoinPoolBySlugPage() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter password"
                   error={errors.password}
                   helperText="Enter the password provided by the pool owner"
                 />
               </div>
 
-              {/* Submit Error */}
               {errors.submit && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                   <p className="text-sm text-red-600">{errors.submit}</p>
                 </div>
               )}
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>
                 {loading ? 'Joining Pool...' : 'Join Pool'}
               </Button>
             </form>
           </div>
 
-          {/* Info Box */}
           <div className="mt-6 rounded-lg border border-green-100 bg-green-50 p-4">
             <Heading level={4} className="mb-2 text-green-900">
               What Happens Next?
             </Heading>
             <ul className="space-y-1 text-sm text-green-800">
               <li>• Wait for the pool owner to start the draft</li>
-              <li>• Draft 5 teams when it's your turn</li>
+              <li>• Draft 5 teams when it&apos;s your turn</li>
               <li>• Earn points as your teams win games</li>
               <li>• Compete on the leaderboard</li>
             </ul>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useQuery } from '@apollo/client/react';
+import { usePathname } from 'next/navigation';
 import { Header } from './components/organisms/header';
 import { Heading } from './components/atoms/heading';
 import { Button } from './components/atoms/button';
@@ -20,6 +21,8 @@ interface UserPoolsVars {
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
+  const pathname = usePathname();
+  const signInHref = `/auth/sign-in?next=${encodeURIComponent(pathname || '/')}`;
 
   // Fetch user's pools
   const { data: poolsData, loading: poolsLoading } = useQuery<UserPoolsData, UserPoolsVars>(
@@ -128,19 +131,13 @@ export default function Home() {
                 Get Started
               </Heading>
               <p className="mb-8 text-center text-gray-600">
-                Sign in with a mock email to create or join a pool. (Magic link
-                authentication will be added later)
+                Sign in with a magic link to create pools, join invites, and restore access to your saved pools.
               </p>
 
               <div className="flex flex-col gap-4">
-                <Link href="/pools/create" className="w-full">
+                <Link href={signInHref} className="w-full">
                   <Button variant="primary" size="lg" className="w-full">
-                    Create a Pool
-                  </Button>
-                </Link>
-                <Link href="/pools/join" className="w-full">
-                  <Button variant="outline" size="lg" className="w-full">
-                    Join a Pool
+                    Sign In
                   </Button>
                 </Link>
               </div>

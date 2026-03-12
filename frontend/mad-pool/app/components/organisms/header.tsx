@@ -2,12 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/app/contexts/UserContext';
 import { Button } from '../atoms/button';
 import { Heading } from '../atoms/heading';
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated, signOut } = useAuth();
+  const pathname = usePathname();
+  const signInHref = `/auth/sign-in?next=${encodeURIComponent(pathname || '/')}`;
 
   return (
     <header className="border-b border-gray-200 bg-white shadow-sm">
@@ -40,18 +43,11 @@ export const Header: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <>
-                <Link href="/pools/create">
-                  <Button variant="primary" size="sm">
-                    Create Pool
-                  </Button>
-                </Link>
-                <Link href="/pools/join">
-                  <Button variant="outline" size="sm">
-                    Join Pool
-                  </Button>
-                </Link>
-              </>
+              <Link href={signInHref}>
+                <Button variant="primary" size="sm">
+                  Sign In
+                </Button>
+              </Link>
             )}
           </nav>
         </div>

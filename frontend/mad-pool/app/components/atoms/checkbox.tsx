@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: string;
@@ -10,7 +10,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   id,
   ...props
 }) => {
-  const checkboxId = id || `checkbox-${Math.random().toString(36).substring(2, 11)}`;
+  const generatedId = useId();
+  const checkboxId = id || generatedId;
 
   return (
     <div className="flex items-center">

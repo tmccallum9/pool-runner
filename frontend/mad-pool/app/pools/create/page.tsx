@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Header } from '@/app/components/organisms/header';
 import { Heading } from '@/app/components/atoms/heading';
 import { Input } from '@/app/components/atoms/input';
@@ -20,16 +21,16 @@ interface CreatePoolData {
 
 export default function CreatePoolPage() {
   const router = useRouter();
-  const { user, isAuthenticated, setUser, loading: authLoading } = useAuth();
+  const pathname = usePathname();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [poolName, setPoolName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [mockEmail, setMockEmail] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const signInHref = `/auth/sign-in?next=${encodeURIComponent(pathname || '/pools/create')}`;
 
   const [createPool, { loading }] = useMutation<CreatePoolData>(CREATE_POOL, {
     onCompleted: (data) => {
-      // Redirect to pool dashboard on success
       router.push(`/pools/${data.createPool.pool.id}`);
     },
     onError: (error) => {
@@ -39,10 +40,6 @@ export default function CreatePoolPage() {
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-
-    if (!isAuthenticated && !mockEmail.trim()) {
-      newErrors.mockEmail = 'Email is required';
-    }
 
     if (!poolName.trim()) {
       newErrors.poolName = 'Pool name is required';
@@ -62,35 +59,61 @@ export default function CreatePoolPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!validateForm()) {
       return;
-    }
-
-    // If not authenticated with JWT, set mock user first
-    const hasAuthToken = typeof window !== 'undefined' && !!localStorage.getItem('authToken');
-    if (!hasAuthToken && !isAuthenticated && mockEmail) {
-      setUser({
-        id: `mock-${Date.now()}`,
-        email: mockEmail,
-        createdAt: new Date().toISOString(),
-      });
     }
 
     try {
       await createPool({
         variables: {
           name: poolName,
-          password: password,
+          password,
         },
       });
     } catch (error) {
-      // Error handling is done in onError callback
       console.error('Create pool error:', error);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-16">
+          <div className="mx-auto max-w-md text-center">
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto px-4 py-16">
+          <div className="mx-auto max-w-md rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
+            <Heading level={2} className="mb-3">
+              Sign In Required
+            </Heading>
+            <p className="mb-6 text-gray-600">
+              Create a pool with a real account so ownership, invitations, and draft actions are tied to the
+              correct user.
+            </p>
+            <Link href={signInHref}>
+              <Button variant="primary" size="lg" className="w-full">
+                Sign In to Create a Pool
+              </Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -109,25 +132,6 @@ export default function CreatePoolPage() {
 
           <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Mock Email (only show if not authenticated) */}
-              {!isAuthenticated && (
-                <div>
-                  <Label htmlFor="mockEmail" required>
-                    Your Email
-                  </Label>
-                  <Input
-                    id="mockEmail"
-                    type="email"
-                    value={mockEmail}
-                    onChange={(e) => setMockEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    error={errors.mockEmail}
-                    helperText="Mock authentication - enter any email"
-                  />
-                </div>
-              )}
-
-              {/* Pool Name */}
               <div>
                 <Label htmlFor="poolName" required>
                   Pool Name
@@ -136,14 +140,13 @@ export default function CreatePoolPage() {
                   id="poolName"
                   type="text"
                   value={poolName}
-                  onChange={(e) => setPoolName(e.target.value)}
+                  onChange={(event) => setPoolName(event.target.value)}
                   placeholder="My March Madness Pool"
                   error={errors.poolName}
                   helperText="Choose a unique name for your pool"
                 />
               </div>
 
-              {/* Password */}
               <div>
                 <Label htmlFor="password" required>
                   Pool Password
@@ -152,14 +155,13 @@ export default function CreatePoolPage() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter password"
                   error={errors.password}
                   helperText="Members will need this to join your pool"
                 />
               </div>
 
-              {/* Confirm Password */}
               <div>
                 <Label htmlFor="confirmPassword" required>
                   Confirm Password
@@ -168,33 +170,24 @@ export default function CreatePoolPage() {
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="Confirm password"
                   error={errors.confirmPassword}
                 />
               </div>
 
-              {/* Submit Error */}
               {errors.submit && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                   <p className="text-sm text-red-600">{errors.submit}</p>
                 </div>
               )}
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>
                 {loading ? 'Creating Pool...' : 'Create Pool'}
               </Button>
             </form>
           </div>
 
-          {/* Info Box */}
           <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
             <Heading level={4} className="mb-2 text-blue-900">
               Pool Owner Benefits

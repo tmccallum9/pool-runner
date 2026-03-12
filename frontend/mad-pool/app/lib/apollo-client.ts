@@ -3,7 +3,7 @@ import { InMemoryCache } from '@apollo/client/cache';
 import { HttpLink } from '@apollo/client/link/http';
 import { setContext } from '@apollo/client/link/context';
 
-let client: any = null;
+let client: ApolloClient | null = null;
 
 export function getApolloClient() {
   const isServer = typeof window === 'undefined';

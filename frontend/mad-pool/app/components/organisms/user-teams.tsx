@@ -55,7 +55,7 @@ export const UserTeams: React.FC<UserTeamsProps> = ({
         <Heading level={3} className="mb-2 text-gray-700">
           No Teams Drafted
         </Heading>
-        <p className="text-gray-600">You haven't drafted any teams yet.</p>
+        <p className="text-gray-600">You haven&apos;t drafted any teams yet.</p>
       </div>
     );
   }

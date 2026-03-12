@@ -48,7 +48,7 @@ class PoolType(DjangoObjectType):
         return self.url_slug
 
     def resolve_draftStatus(self, info):
-        return self.draft_status
+        return getattr(self.draft_status, 'value', self.draft_status)
 
     def resolve_maxMembers(self, info):
         return self.max_members

@@ -10,7 +10,6 @@ export interface DraftTurnIndicatorProps {
 }
 
 export const DraftTurnIndicator: React.FC<DraftTurnIndicatorProps> = ({
-  currentUserEmail,
   draftingUserEmail,
   isMyTurn,
   draftPosition,

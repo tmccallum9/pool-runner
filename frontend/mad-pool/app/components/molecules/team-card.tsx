@@ -48,7 +48,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
             <span className="font-medium">Seed: {seedRank}</span>
             {region && (
               <>
-                <span className="text-gray-400">"</span>
+                <span className="text-gray-400">&middot;</span>
                 <span>{region}</span>
               </>
             )}

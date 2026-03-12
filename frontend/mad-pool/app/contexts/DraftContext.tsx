@@ -11,7 +11,7 @@ interface DraftContextType {
   currentTurn: PoolMembership | null;
   pool: Pool | null;
   loading: boolean;
-  error: any;
+  error: Error | null | undefined;
   refetchDraft: () => void;
 }
 
