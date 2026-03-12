@@ -21,3 +21,6 @@ sendgrid==6.11.0
 
 # Utilities
 python-dotenv==1.0.0
+
+#Deploy
+gunicorn==23.0.0
