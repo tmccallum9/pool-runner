@@ -3,7 +3,9 @@ import { gql } from '@apollo/client';
 // Send magic link to user's email
 export const SEND_MAGIC_LINK = gql`
   mutation SendMagicLink($email: String!) {
-    sendMagicLink(email: $email)
+    sendMagicLink(email: $email) {
+      success
+    }
   }
 `;
 

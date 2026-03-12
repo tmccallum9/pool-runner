@@ -12,7 +12,9 @@ import { Label } from '@/app/components/atoms/label';
 import { SEND_MAGIC_LINK } from '@/app/lib/mutations/auth';
 
 interface SendMagicLinkData {
-  sendMagicLink: boolean;
+  sendMagicLink: {
+    success: boolean;
+  };
 }
 
 function SignInContent() {
@@ -23,7 +25,11 @@ function SignInContent() {
   const [submitError, setSubmitError] = useState('');
 
   const [sendMagicLink, { loading }] = useMutation<SendMagicLinkData>(SEND_MAGIC_LINK, {
-    onCompleted: () => {
+    onCompleted: (data) => {
+      if (!data.sendMagicLink.success) {
+        setSubmitError('Magic link request failed.');
+        return;
+      }
       setSubmitted(true);
       setSubmitError('');
     },
