@@ -32,7 +32,7 @@ For each test user:
 3. Run:
 
 ```js
-localStorage.getItem('authToken')
+localStorage.getItem("authToken");
 ```
 
 Copy one token for the pool owner and at least one additional token for pool members.
