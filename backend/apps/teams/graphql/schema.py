@@ -32,14 +32,19 @@ class TeamStatusType(graphene.ObjectType):
 
 class TeamType(DjangoObjectType):
     tournament_status = graphene.Field(TeamStatusType)
+    results = graphene.List('apps.tournaments.graphql.schema.TeamGameResultType')
 
     class Meta:
         model = Team
+        name = 'Team'
         fields = ('id', 'pool', 'name', 'seed_rank', 'region', 'is_eliminated', 'elimination_round', 'created_at', 'updated_at')
 
     def resolve_tournament_status(self, info):
         """Get the team's tournament status as a structured object."""
         return self.get_tournament_status()
+
+    def resolve_results(self, info):
+        return self.game_results.all().order_by('tournament_round')
 
 
 class DraftPickType(DjangoObjectType):

@@ -83,15 +83,11 @@ export const GET_CURRENT_DRAFT_TURN = gql`
   query GetCurrentDraftTurn($poolId: UUID!) {
     getCurrentDraftTurn(poolId: $poolId) {
       id
+      draftPosition
       user {
         id
         email
       }
-      pool {
-        id
-      }
-      isOwner
-      hasDrafted
     }
   }
 `;

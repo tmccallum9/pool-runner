@@ -70,7 +70,7 @@ export const TeamsList: React.FC<TeamsListProps> = ({
             name={team.name}
             seedRank={team.seedRank}
             region={team.region}
-            status={getTeamStatus(team.results)}
+            status={getTeamStatus(team.results || [])}
           />
         ))}
       </div>

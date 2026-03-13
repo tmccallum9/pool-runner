@@ -55,7 +55,7 @@ export interface Team {
   name: string;
   seedRank: number;
   region?: string;
-  results: TeamGameResult[];
+  results?: TeamGameResult[];
   createdAt: string;
 }
 

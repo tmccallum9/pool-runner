@@ -37,6 +37,8 @@ class PoolType(DjangoObjectType):
     urlSlug = graphene.String()
     draftStatus = graphene.Field(DraftStatusEnum)
     maxMembers = graphene.Int()
+    memberCount = graphene.Int()
+    teams = graphene.List('apps.teams.graphql.schema.TeamType')
     createdAt = graphene.DateTime()
     updatedAt = graphene.DateTime()
 
@@ -53,6 +55,12 @@ class PoolType(DjangoObjectType):
     def resolve_maxMembers(self, info):
         return self.max_members
 
+    def resolve_memberCount(self, info):
+        return self.memberships.count()
+
+    def resolve_teams(self, info):
+        return self.teams.all().order_by('seed_rank', 'name')
+
     def resolve_createdAt(self, info):
         return self.created_at
 
@@ -64,6 +72,7 @@ class PoolMembershipType(DjangoObjectType):
     # Expose camelCase versions for GraphQL
     draftPosition = graphene.Int()
     totalPoints = graphene.Int()
+    picks = graphene.List('apps.teams.graphql.schema.DraftPickType')
     createdAt = graphene.DateTime()
 
     class Meta:
@@ -75,6 +84,9 @@ class PoolMembershipType(DjangoObjectType):
 
     def resolve_totalPoints(self, info):
         return self.total_points
+
+    def resolve_picks(self, info):
+        return self.user.draft_picks.filter(pool=self.pool).order_by('draft_round')
 
     def resolve_createdAt(self, info):
         return self.created_at

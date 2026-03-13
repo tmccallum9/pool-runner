@@ -75,7 +75,7 @@ export const UserTeams: React.FC<UserTeamsProps> = ({
               name={pick.team.name}
               seedRank={pick.team.seedRank}
               region={pick.team.region}
-              status={getTeamStatus(pick.team.results)}
+              status={getTeamStatus(pick.team.results || [])}
             />
             <div className="absolute right-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-xs font-semibold text-white">
               Round {pick.draftRound}
