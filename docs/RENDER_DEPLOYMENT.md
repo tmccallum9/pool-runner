@@ -89,10 +89,11 @@ CORS_ALLOWED_ORIGINS=https://<your-frontend-url>.onrender.com
 
 # Frontend URL - ADD AFTER FRONTEND DEPLOYED
 FRONTEND_URL=https://<your-frontend-url>.onrender.com
+MAGIC_LINK_BASE_URL=https://<your-frontend-url>.onrender.com
 
 # Email (Optional - for magic link authentication)
 SENDGRID_API_KEY=<your-sendgrid-api-key>
-FROM_EMAIL=noreply@poolrunner.com
+FROM_EMAIL=tyler.mccallum9@gmail.com
 
 # Python
 PYTHON_VERSION=3.10.12

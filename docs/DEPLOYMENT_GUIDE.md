@@ -99,7 +99,7 @@ JWT_ALGORITHM=HS256
 JWT_EXPIRATION_HOURS=24
 MAGIC_LINK_EXPIRATION_MINUTES=15
 SENDGRID_API_KEY=your-sendgrid-api-key
-FROM_EMAIL=noreply@poolrunner.com
+FROM_EMAIL=tyler.mccallum9@gmail.com
 ```
 
 **IMPORTANT**: Update these after deployment:

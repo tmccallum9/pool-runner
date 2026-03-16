@@ -36,9 +36,10 @@ JWT_EXPIRATION_HOURS=24
 
 MAGIC_LINK_EXPIRATION_MINUTES=15
 FRONTEND_URL=http://localhost:3000
+MAGIC_LINK_BASE_URL=http://localhost:3000
 
 SENDGRID_API_KEY=
-FROM_EMAIL=noreply@poolrunner.local
+FROM_EMAIL=tyler.mccallum9@gmail.com
 
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```

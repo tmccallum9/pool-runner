@@ -98,6 +98,7 @@ export default function PoolLayout({ children }: { children: React.ReactNode }) 
           poolId={pool.id}
           poolName={pool.name}
           draftStatus={pool.draftStatus}
+          isOwner={isOwner}
         />
         <main className="flex-1 overflow-auto">
           <div className="container mx-auto p-6">{children}</div>

@@ -42,6 +42,10 @@ class TournamentQueries(graphene.ObjectType):
         pool_id=graphene.UUID(required=True),
         team_id=graphene.UUID(required=True)
     )
+    get_pool_results = graphene.List(
+        TeamGameResultType,
+        pool_id=graphene.UUID(required=True)
+    )
 
     def resolve_get_team_results(self, info, pool_id, team_id):
         """Get all tournament results for a specific team."""
@@ -53,6 +57,22 @@ class TournamentQueries(graphene.ObjectType):
             pool_id=pool_id,
             team_id=team_id
         ).order_by('tournament_round')
+
+    def resolve_get_pool_results(self, info, pool_id):
+        """Get all tournament results for a pool."""
+        user = authenticate_request(info)
+        if not user:
+            raise NotAuthenticatedError()
+
+        # Verify pool exists
+        try:
+            Pool.objects.get(id=pool_id)
+        except Pool.DoesNotExist:
+            raise PoolNotFoundError()
+
+        return TeamGameResult.objects.filter(
+            pool_id=pool_id
+        ).select_related('team').order_by('team__name', 'tournament_round')
 
 
 # Mutations

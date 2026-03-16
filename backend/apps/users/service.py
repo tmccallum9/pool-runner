@@ -2,10 +2,13 @@
 Utility functions for user authentication and magic links.
 """
 import jwt
+import logging
 from datetime import datetime, timedelta
 from django.conf import settings
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+
+logger = logging.getLogger(__name__)
 
 
 def create_jwt_token(user):
@@ -87,7 +90,7 @@ def send_magic_link_email(email, magic_link_token):
     Returns:
         bool: True if email sent successfully, False otherwise
     """
-    magic_link_url = f"{settings.FRONTEND_URL}/auth/verify?token={magic_link_token}"
+    magic_link_url = f"{settings.MAGIC_LINK_BASE_URL}/auth/verify?token={magic_link_token}"
 
     message = Mail(
         from_email=settings.FROM_EMAIL,
@@ -114,15 +117,29 @@ def send_magic_link_email(email, magic_link_token):
     )
 
     if not settings.SENDGRID_API_KEY:
-        print(f"Magic link fallback for {email}: {magic_link_url}")
+        logger.warning("SendGrid not configured. Magic link fallback for %s: %s", email, magic_link_url)
         return True
 
     try:
         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
         response = sg.send(message)
+
+        if response.status_code not in [200, 201, 202]:
+            logger.error(
+                "SendGrid rejected magic link email for %s with status %s. Response body: %s",
+                email,
+                response.status_code,
+                response.body,
+            )
+
         return response.status_code in [200, 201, 202]
     except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.exception(
+            "Error sending SendGrid magic link email for %s from %s. "
+            "Check SENDGRID_API_KEY and verify FROM_EMAIL in SendGrid Sender Authentication.",
+            email,
+            settings.FROM_EMAIL,
+        )
         return False
 
 

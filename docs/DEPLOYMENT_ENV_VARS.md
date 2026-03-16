@@ -40,12 +40,13 @@ JWT_EXPIRATION_HOURS=24
 ```
 MAGIC_LINK_EXPIRATION_MINUTES=15
 FRONTEND_URL=https://your-app.vercel.app
+MAGIC_LINK_BASE_URL=https://your-app.vercel.app
 ```
 
 ### Email (SendGrid)
 ```
 SENDGRID_API_KEY=your-sendgrid-api-key
-FROM_EMAIL=noreply@poolrunner.com
+FROM_EMAIL=tyler.mccallum9@gmail.com
 ```
 
 ### CORS (Update after frontend deployment)

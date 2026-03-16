@@ -10,16 +10,18 @@ interface SidebarProps {
   poolId: string;
   poolName: string;
   draftStatus: DraftStatus;
+  isOwner?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   poolId,
   poolName,
   draftStatus,
+  isOwner = false,
 }) => {
   const pathname = usePathname();
 
-  const navItems = [
+  const baseNavItems = [
     {
       href: `/pools/${poolId}`,
       label: 'Dashboard',
@@ -46,6 +48,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       active: pathname === `/pools/${poolId}/leaderboard`,
     },
   ];
+
+  // Add Results navigation item for pool owners only
+  const ownerNavItems = isOwner
+    ? [
+        {
+          href: `/pools/${poolId}/results`,
+          label: 'Results',
+          icon: '🎯',
+          active: pathname === `/pools/${poolId}/results`,
+          badge: null,
+        },
+      ]
+    : [];
+
+  const navItems = [...baseNavItems, ...ownerNavItems];
 
   return (
     <aside className="w-64 border-r border-gray-200 bg-white">

@@ -91,3 +91,22 @@ export const GET_CURRENT_DRAFT_TURN = gql`
     }
   }
 `;
+
+// Get all tournament results for a pool
+export const GET_POOL_RESULTS = gql`
+  query GetPoolResults($poolId: UUID!) {
+    getPoolResults(poolId: $poolId) {
+      id
+      team {
+        id
+        name
+        seedRank
+        region
+      }
+      tournamentRound
+      result
+      pointsAwarded
+      updatedAt
+    }
+  }
+`;

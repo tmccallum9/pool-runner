@@ -11,6 +11,7 @@ interface UserTeamsProps {
   userId: string;
   title?: string;
   className?: string;
+  refreshKey?: number;
 }
 
 export const UserTeams: React.FC<UserTeamsProps> = ({
@@ -18,8 +19,9 @@ export const UserTeams: React.FC<UserTeamsProps> = ({
   userId,
   title = 'My Teams',
   className = '',
+  refreshKey = 0,
 }) => {
-  const { draftPicks, loading, error, refetch } = useUserDraftPicks(poolId, userId);
+  const { draftPicks, loading, error, refetch } = useUserDraftPicks(poolId, userId, refreshKey);
 
   if (loading) {
     return (

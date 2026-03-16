@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useParams } from 'next/navigation';
 import { Heading } from '@/app/components/atoms/heading';
@@ -29,8 +29,10 @@ export default function DraftPage() {
   const params = useParams();
   const poolIdOrSlug = params.poolId as string;
   const { user } = useAuth();
-  const { pool, loading: poolLoading } = usePool(poolIdOrSlug);
-  const { members, loading: membersLoading } = usePoolMembers(pool?.id || '');
+  const [refreshing, setRefreshing] = useState(false);
+  const [userTeamsRefreshKey, setUserTeamsRefreshKey] = useState(0);
+  const { pool, loading: poolLoading, refetch: refetchPool } = usePool(poolIdOrSlug);
+  const { members, loading: membersLoading, refetch: refetchMembers } = usePoolMembers(pool?.id || '');
 
   const {
     data: picksData,
@@ -50,7 +52,6 @@ export default function DraftPage() {
     variables: { poolId: pool?.id || '' },
     skip: !pool?.id || pool.draftStatus !== DraftStatus.IN_PROGRESS,
     fetchPolicy: 'cache-and-network',
-    pollInterval: pool?.draftStatus === DraftStatus.IN_PROGRESS ? 5000 : 0,
   });
 
   const {
@@ -61,14 +62,34 @@ export default function DraftPage() {
     variables: { poolId: pool?.id || '' },
     skip: !pool?.id,
     fetchPolicy: 'cache-and-network',
-    pollInterval: pool?.draftStatus === DraftStatus.IN_PROGRESS ? 5000 : 0,
   });
 
   const refetchDraftState = async () => {
-    await Promise.all([refetchPicks(), refetchTurn(), refetchAvailableTeams()]);
+    const refreshCalls: Promise<any>[] = [refetchPool(), refetchPicks(), refetchAvailableTeams()];
+
+    if (pool?.id) {
+      refreshCalls.push(refetchMembers());
+    }
+
+    if (pool?.draftStatus === DraftStatus.IN_PROGRESS) {
+      refreshCalls.push(refetchTurn());
+    }
+
+    await Promise.all(refreshCalls);
+    setUserTeamsRefreshKey((current) => current + 1);
   };
 
   const { draftTeam, loading: drafting, error: draftError } = useDraftPick(refetchDraftState);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await refetchDraftState();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const currentTurn = turnData?.getCurrentDraftTurn || null;
   const draftPicks = picksData?.getDraftPicks || [];
@@ -88,12 +109,24 @@ export default function DraftPage() {
   return (
     <div className="space-y-8">
       <div>
-        <Heading level={1} className="mb-2">
-          Draft Room
-        </Heading>
-        <p className="text-gray-600">
-          {pool.name} • {memberCount} members • {draftPicks.length} total picks
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <Heading level={1} className="mb-2">
+              Draft Room
+            </Heading>
+            <p className="text-gray-600">
+              {pool.name} • {memberCount} members • {draftPicks.length} total picks
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={refreshing || poolLoading || membersLoading || picksLoading || turnLoading || teamsLoading}
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh Draft'}
+          </Button>
+        </div>
       </div>
 
       <DraftTurnIndicator
@@ -156,7 +189,12 @@ export default function DraftPage() {
 
           {user?.id && currentMembership && (
             <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <UserTeams poolId={pool.id} userId={user.id} title="Your Picks" />
+              <UserTeams
+                poolId={pool.id}
+                userId={user.id}
+                title="Your Picks"
+                refreshKey={userTeamsRefreshKey}
+              />
             </div>
           )}
         </div>
